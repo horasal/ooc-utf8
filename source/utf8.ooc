@@ -1,10 +1,8 @@
 import structs/ArrayList
 
-UTF8State: enum{
-    ACCEPT=0, DECLINE=1
-}
-
 UTF8: class{
+    ACCEPT := static const 0
+    DECLINE := static const 1
     utf8d := const static [
       0 as UInt8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 00..1f
       0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 20..3f
@@ -22,23 +20,23 @@ UTF8: class{
       1,3,1,1,1,1,1,3,1,3,1,1,1,1,1,1,1,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1, // s7..s8
   ]
 
-  _state: UTF8State = UTF8State ACCEPT
+  _state: Int32 = ACCEPT
   _codep: Int32 = 0
 
   init: func
 
   reset: func{
-      _state = UTF8State ACCEPT
+      _state = ACCEPT
       _codep = 0
   }
 
   decode: inline func(byte: UInt32) -> Bool{
       type := utf8d[byte]
 
-      _codep = (_state != UTF8State ACCEPT) ? \
-          (byte & 0x3fu) | (_codep << 6) : (0xff >> type) & (byte)
+      _codep = (_state != ACCEPT) ? \
+          (byte & 0x0000003fu) | (_codep << 6) : (0x000000ff >> type) & (byte)
 
-      !((_state = utf8d[256+_state*16+type] as UTF8State) as Int as Bool)
+      (_state = utf8d[256+_state*16+type]) == 0
   }
 
   decode: inline func ~char (byte: Char) -> Bool{ decode(byte as UChar as UInt32) }
@@ -48,12 +46,9 @@ UTF8: class{
   toUTF: inline func ~arraylist (byte: ArrayList<Char>) -> ArrayList<UInt32>{
       reset()
       result := ArrayList<UInt32> new(byte size)
-      curWord : UInt32 = 0x00;
       for(i in 0..byte size){
-          curWord = (curWord << 8)| byte[i]
           if(decode(byte[i])){
-              result add(curWord)
-              curWord = 0x00
+              result add(_codep)
           }
       }
       result
