@@ -51,7 +51,7 @@ UTF8: class{
       curWord : UInt32 = 0x00;
       for(i in 0..byte size){
           curWord = (curWord << 8)| byte[i]
-          if(utf decode(byte[i])){
+          if(decode(byte[i])){
               result add(curWord)
               curWord = 0x00
           }
@@ -78,7 +78,7 @@ UTF8: class{
     reset()
     count := 0
     for(i in 0..s size){
-        if(utf decode(s[i])) count += 1
+        if(decode(s[i])) count += 1
     }
     count
   }
